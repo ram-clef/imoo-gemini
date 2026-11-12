@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#173e32">
+<title>IMOO | Merchant onboarding</title>
+<link rel="icon" href="/logo.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/style.css">
+<script type="module" src="/app.js"></script>
+</head>
+<body>
+<header>
+  <a class="brand" href="/"><img src="/logo.png" alt=""><b>IMOO</b></a>
+  <div class="header-actions">
+    <button id="theme-toggle" class="theme-switch" type="button" role="switch" aria-label="Dark mode" aria-checked="false"><span class="theme-sun" aria-hidden="true">☀</span><span class="theme-moon" aria-hidden="true">☾</span><span class="theme-thumb" aria-hidden="true"></span></button>
+    <button id="install" class="secondary" hidden>Install app</button>
+  </div>
+</header>
+<div class="layout" id="layout" data-stage="mobile">
+  <aside>
+    <div class="eyebrow">YOUR NEXT CHAPTER</div>
+    <h1>A small step.<br>A bigger future.</h1>
+    <p>Bring your business online with a simple, guided verification.</p>
+    <ol id="steps">
+      <li data-step="mobile"><i>1</i>Mobile number</li>
+      <li data-step="consent"><i>2</i>Data collection</li>
+      <li data-step="documents"><i>3</i>Browse &amp; submit</li>
+    </ol>
+  </aside>
+<main>
+  <div class="topline"><span>MERCHANT ONBOARDING</span></div>
+  <div class="progress" aria-hidden="true"><div></div></div>
+  <section class="panel" aria-label="Merchant onboarding">
+    <form id="lookup">
+      <h2>Merchant onboarding</h2>
+      <p class="muted">Enter your mobile number to start or continue.</p>
+      <label for="mobile">Mobile number</label>
+      <div class="phone"><span>+91</span><input id="mobile" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" pattern="[6-9][0-9]{9}" required></div>
+      <button class="primary" type="submit">Continue</button>
+    </form>
+    <div id="result" hidden>
+      <nav aria-label="Onboarding navigation"><button id="back-to-mobile" class="secondary" type="button">← Back</button><button id="refresh" class="secondary" type="button">Refresh status</button></nav>
+      <h2 id="heading">Onboarding status</h2>
+      <p id="summary" class="muted"></p>
+      <section id="completion" aria-label="Onboarding result" hidden>
+        <dl id="completion-receipt" class="completion-items completion-receipt"></dl>
+        <h3 class="completion-items-heading">Submission status</h3>
+        <dl id="completion-items" class="completion-items"></dl>
+      </section>
+      <p id="pending" class="notice" hidden></p>
+      <ol id="documents" class="tracker" aria-label="Onboarding progress"></ol>
+      <ul id="notes" class="muted"></ul>
+      <section id="collection" class="section" hidden>
+        <h2>Welcome to IMOO</h2>
+        <p>IMOO collects the documents, photos and location you choose to provide. Document images are sent to the document analyzer to read the details. IMOO sends the onboarding data to its verification backend.</p>
+        <button type="button" class="primary" id="agree">I agree and want to continue</button>
+      </section>
+      <dialog id="review-dialog" aria-labelledby="review-heading">
+        <h2 id="review-heading">Review extracted documents</h2>
+        <p id="review-message"></p>
+        <div id="review-details"></div>
+        <div class="actions"><button type="button" id="cancel-review">Cancel</button><button type="button" id="accept-review">Continue</button></div>
+      </dialog>
+      <section id="photos" class="section photo-section" hidden aria-labelledby="photos-heading">
+        <h2 id="photos-heading">Photos &amp; location</h2>
+        <div class="photos">
+          <div id="shop-field" class="photo-card">
+            <h3>Shop photo</h3>
+            <p class="muted">Take a photo of the storefront.</p>
+            <div id="shop-photo-options" class="actions"><button type="button" id="shop-camera">Take photo</button></div>
+            <div id="shop-preview" class="photo-preview"></div>
+          </div>
+          <div id="location-field" class="photo-card location-card">
+            <h3>Shop location</h3>
+            <div id="location-details" hidden>
+              <dl>
+                <div><dt>Latitude</dt><dd id="shop-latitude"></dd></div>
+                <div><dt>Longitude</dt><dd id="shop-longitude"></dd></div>
+              </dl>
+            </div>
+            <p id="coordinates" class="muted" aria-live="polite"></p>
+            <div class="actions"><button type="button" id="gps">Use current location</button><button type="button" id="clear-location" hidden>Remove location</button></div>
+          </div>
+          <div id="owner-field" class="photo-card">
+            <h3>Merchant photo <small>Optional</small></h3>
+            <p class="muted">Take a photo of the business owner.</p>
+            <div id="owner-photo-options" class="actions"><button type="button" id="owner-camera">Take photo</button><button type="button" data-pick="owner">Browse</button></div>
+            <input id="owner" type="file" accept="image/*" hidden>
+            <div id="owner-preview" class="photo-preview"></div>
+          </div>
+        </div>
+      </section>
+      <section id="document-workspace" class="section" aria-labelledby="documents-heading" hidden>
+        <h2 id="documents-heading">Documents</h2>
+        <div id="doc-upload">
+          <div class="upload-tools">
+            <button type="button" data-pick="all">Browse files</button>
+            <button type="button" id="document-camera">Capture</button>
+          </div>
+          <input id="all" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.heic,.pdf" hidden>
+        </div>
+        <div id="document-summary" class="document-summary"></div>
+      </section>
+      <form id="submission" hidden>
+        <section id="consent-field" class="section">
+          <h2>Verification and onboarding consent <small>Required</small></h2>
+          <details><summary>What you are agreeing to</summary><p>IMOO will share the selected document values and evidence, your mobile number, and any shop or merchant photos and location shown below with the MSME onboarding backend for verification. The bank verification may credit ₹1. The backend may create your MSME onboarding record and set up your ONDC store after the required checks are complete.</p>
+          <ul id="consent-items"></ul></details>
+          <label class="check"><input id="consent" type="checkbox" required> I confirm the details are correct and authorise IMOO to submit every selected item for verification and onboarding.</label>
+        </section>
+        <button id="send" type="submit" class="primary">Continue</button>
+      </form>
+    </div>
+    <p id="feedback" role="status" aria-live="polite" hidden></p>
+  </section>
+</main>
+</div>
+<dialog id="shop-camera-dialog" class="camera-dialog" aria-labelledby="camera-heading">
+  <h2 id="camera-heading">Shop photo</h2>
+  <video id="shop-camera-preview" autoplay muted playsinline></video>
+  <p id="shop-camera-status" class="camera-status" role="status"></p>
+  <div class="actions">
+    <button type="button" id="shop-camera-close">Cancel</button>
+    <button type="button" id="shop-camera-capture" disabled>Capture</button>
+  </div>
+</dialog>
+<dialog id="loading-indicator" class="loading-indicator" aria-label="Processing">
+  <div class="loading-brand">
+    <span class="loading-spinner" aria-hidden="true"></span>
+    <img src="/logo.png" alt="IMOO">
+  </div>
+  <p id="loading-message" role="status" aria-live="polite"></p>
+</dialog>
+<dialog id="error-dialog" class="error-dialog" role="alertdialog" aria-labelledby="error-heading" aria-describedby="error-message">
+  <h2 id="error-heading">Something went wrong</h2>
+  <p id="error-message"></p>
+  <form method="dialog"><button type="submit">OK</button></form>
+</dialog>
+</body>
+</html>
