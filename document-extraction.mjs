@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { postHttps, upstreamErrorCode, upstreamTimeoutMs } from './upstream-https.mjs';
 import { readFile } from 'node:fs/promises';
+import { setTimeout as delay } from 'node:timers/promises';
 import { extractionFields as fields } from './public/workflow.js';
 const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent';
 const primary = { pan: 'panNo', udyam: 'udyamNo', acc: 'accountNumber', fssai: 'number', gst: 'gstNumber' };
@@ -21,9 +22,21 @@ async function analyze(file, apiKey, instructions) {
   const log = (event, data) => console.log('[Gemini ' + id + '] ' + event + ' ' + JSON.stringify(data));
   log('request', { mimeType: file.type, bytes: image.length, timeoutMs: upstreamTimeoutMs });
 
+  const signal = AbortSignal.timeout(upstreamTimeoutMs);
   let response;
   try {
-    response = await postHttps(endpoint, headers, body);
+    response = await postHttps(endpoint, headers, body, signal);
+    if (response.status === 503) {
+      const retryAfter = response.headers.get('retry-after');
+      const waitMs = retryAfter && /^\d+$/.test(retryAfter)
+        ? Number(retryAfter) * 1000
+        : 2000;
+      if (Date.now() - started + waitMs < upstreamTimeoutMs) {
+        log('retry', { status: 503, delayMs: waitMs });
+        await delay(waitMs, undefined, { signal });
+        response = await postHttps(endpoint, headers, body, signal);
+      }
+    }
   } catch (error) {
     const code = upstreamErrorCode(error);
     log('network error', { code, elapsedMs: Date.now() - started });
@@ -34,10 +47,14 @@ async function analyze(file, apiKey, instructions) {
   const candidate = result?.candidates?.[0];
   log('response', {
     status: response.status,
+    providerStatus: result?.error?.status,
     elapsedMs: Date.now() - started,
     finishReason: candidate?.finishReason,
     blockReason: result?.promptFeedback?.blockReason
   });
+  if (response.status === 503) {
+    throw Error('Gemini is temporarily unavailable. Try again shortly. See Gemini log ' + id + '.');
+  }
   if (!response.ok) {
     throw Error('Gemini returned HTTP ' + response.status + '. See Gemini log ' + id + '.');
   }
